@@ -15,10 +15,12 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "Root(\(rootWords.count))"
+        title = "词根(\(rootWords.count))"
         tableView.rowHeight = 50
         
         updateNaviItem()
+        
+        fetchAttentionList()
     }
     
     private func updateNaviItem() {
@@ -65,6 +67,21 @@ class ViewController: UIViewController {
         return items
     }()
     
+    private var attentionList: [String] = [] {
+        didSet {
+            UserDefaults.standard.set(self.attentionList.joined(separator: indexJoin), forKey: attentionIndex)
+            print(self.attentionList)
+        }
+    }
+    
+    private func fetchAttentionList() {
+        if let all = UserDefaults.standard.string(forKey: attentionIndex), !all.isEmpty {
+            var data = all.components(separatedBy: indexJoin)
+            data.sort()
+            attentionList = data
+        }
+    }
+        
 }
 
 
@@ -77,21 +94,26 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = rootWords[indexPath.item]
+        if attentionList.contains(String(indexPath.item)) {
+            cell.textLabel?.textColor = .red
+        } else {
+            cell.textLabel?.textColor = .white
+        }
         cell.textLabel?.font = .systemFont(ofSize: 17)
+        
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        func addToList(_ list: [String]) {
+        func addToList() {
             let alert = UIAlertController(title: "添加到加深列表里", message: nil, preferredStyle: .alert)
-            let ok = UIAlertAction(title: "添加", style: .default) { action in
-                var indexs = list
-                indexs.append(String(indexPath.item))
-                indexs.sort()
-                let save = indexs.joined(separator: indexJoin)
-                UserDefaults.standard.set(save, forKey: attentionIndex)
-                print(indexs)
+            let ok = UIAlertAction(title: "添加", style: .default) { [weak self] action in
+                guard let self = self else { return }
+
+                self.attentionList.append(String(indexPath.item))
+                self.attentionList.sort()
+                
                 tableView.reloadData()
             }
             let cancel = UIAlertAction(title: "取消", style: .cancel)
@@ -99,17 +121,13 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             alert.addAction(cancel)
             present(alert, animated: true)
         }
-        if let all = UserDefaults.standard.string(forKey: attentionIndex), !all.isEmpty {
-            var indexs = all.components(separatedBy: indexJoin)
-            indexs.sort()
-            if let inRecord = indexs.firstIndex(where: { $0 == String(indexPath.item) }) {
+        if !attentionList.isEmpty {
+            if let inRecord = attentionList.firstIndex(where: { $0 == String(indexPath.item) }) {
                 let alert = UIAlertController(title: "从加深列表里移除", message: nil, preferredStyle: .alert)
-                let ok = UIAlertAction(title: "移除", style: .default) { action in
+                let ok = UIAlertAction(title: "移除", style: .default) { [weak self] action in
+                    guard let self = self else { return }
                     
-                    indexs.remove(at: inRecord)
-                    let save = indexs.joined(separator: indexJoin)
-                    UserDefaults.standard.set(save, forKey: attentionIndex)
-                    print(indexs)
+                    self.attentionList.remove(at: inRecord)
                     tableView.reloadData()
                 }
                 let cancel = UIAlertAction(title: "取消", style: .cancel)
@@ -117,10 +135,10 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
                 alert.addAction(cancel)
                 present(alert, animated: true)
             } else {
-                addToList(indexs)
+                addToList()
             }
         } else {
-            addToList([])
+            addToList()
         }
 
     }
