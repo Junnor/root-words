@@ -13,6 +13,8 @@
 		5ABEBD4D286469CB00B39AAD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5ABEBD4B286469CB00B39AAD /* Main.storyboard */; };
 		5ABEBD4F286469CC00B39AAD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5ABEBD4E286469CC00B39AAD /* Assets.xcassets */; };
 		5ABEBD52286469CC00B39AAD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5ABEBD50286469CC00B39AAD /* LaunchScreen.storyboard */; };
+		5ABEBD5C28646A6800B39AAD /* Words3000.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ABEBD5B28646A6800B39AAD /* Words3000.swift */; };
+		5ABEBD5E28646AD400B39AAD /* WordsRoot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ABEBD5D28646AD400B39AAD /* WordsRoot.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +26,8 @@
 		5ABEBD4E286469CC00B39AAD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5ABEBD51286469CC00B39AAD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		5ABEBD53286469CC00B39AAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5ABEBD5B28646A6800B39AAD /* Words3000.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words3000.swift; sourceTree = "<group>"; };
+		5ABEBD5D28646AD400B39AAD /* WordsRoot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordsRoot.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +63,8 @@
 				5ABEBD45286469CB00B39AAD /* AppDelegate.swift */,
 				5ABEBD47286469CB00B39AAD /* SceneDelegate.swift */,
 				5ABEBD49286469CB00B39AAD /* ViewController.swift */,
+				5ABEBD5B28646A6800B39AAD /* Words3000.swift */,
+				5ABEBD5D28646AD400B39AAD /* WordsRoot.swift */,
 				5ABEBD4B286469CB00B39AAD /* Main.storyboard */,
 				5ABEBD4E286469CC00B39AAD /* Assets.xcassets */,
 				5ABEBD50286469CC00B39AAD /* LaunchScreen.storyboard */,
@@ -138,6 +144,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5ABEBD5C28646A6800B39AAD /* Words3000.swift in Sources */,
+				5ABEBD5E28646AD400B39AAD /* WordsRoot.swift in Sources */,
 				5ABEBD4A286469CB00B39AAD /* ViewController.swift in Sources */,
 				5ABEBD46286469CB00B39AAD /* AppDelegate.swift in Sources */,
 				5ABEBD48286469CB00B39AAD /* SceneDelegate.swift in Sources */,
@@ -287,6 +295,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NUHKX8JBAJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Words/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -314,6 +323,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NUHKX8JBAJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Words/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
