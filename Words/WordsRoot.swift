@@ -8,6 +8,7 @@
 import Foundation
 import RealmSwift
 
+// https://www.mongodb.com/docs/realm/sdk/swift/quick-start/
 
 class LastWord: Object {
     
