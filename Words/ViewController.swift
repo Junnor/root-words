@@ -6,9 +6,13 @@
 //
 
 import UIKit
+import RealmSwift
 
+// https://www.mongodb.com/docs/realm/sdk/swift/quick-start/
 
 class ViewController: UIViewController {
+    
+    private let localRealm = try! Realm()
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -19,15 +23,13 @@ class ViewController: UIViewController {
         tableView.rowHeight = 50
         
         updateNaviItem()
-        
-        fetchAttentionList()
     }
     
     private func updateNaviItem() {
         let record = UIBarButtonItem(image: .add, style: .done, target: self, action: #selector(addRecord))
-
-        if let last = UserDefaults.standard.value(forKey: recordKey) as? String, !last.isEmpty {
-            let jump = UIBarButtonItem(title: last, style: .done, target: self, action: #selector(jump))
+        
+        if let last = lastWord.last {
+            let jump = UIBarButtonItem(title: last.name, style: .done, target: self, action: #selector(jump))
             navigationItem.rightBarButtonItems = [record, jump]
         } else {
             navigationItem.rightBarButtonItem = record
@@ -41,10 +43,17 @@ class ViewController: UIViewController {
             guard let self = self else { return }
             
             if let text = alert.textFields?.first?.text, !text.isEmpty {
-                UserDefaults.standard.set(text, forKey: recordKey)
+                
+                try! self.localRealm.write({
+                    if self.lastWord.isEmpty {
+                        self.localRealm.add(LastWord(name: text))
+                    } else {
+                        self.lastWord.last?.name = text
+                    }
+                })
                 self.updateNaviItem()
             } else {
-
+                
             }
         }
         let cancel = UIAlertAction(title: "取消", style: .cancel)
@@ -54,42 +63,21 @@ class ViewController: UIViewController {
     }
     
     @objc private func jump() {
-        if let last = UserDefaults.standard.string(forKey: recordKey),
-            let index = rootWords.firstIndex(where: { $0 == last }) {
+        if let last = lastWord.last,
+           let index = rootWords.firstIndex(where: { $0 == last.name }) {
             tableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .top, animated: true)
         }
     }
     
-
     private lazy var rootWords: [String] = {
         let items = wordsRoot.map { $0.components(separatedBy: "\"")[1] }
         return items
     }()
     
-    private var attentionList: [String] = [] {
-        didSet {
-            print("list = \(attentionList)")
-            if attentionList.isEmpty {
-                UserDefaults.standard.set(nil, forKey: listIndex)
-                print("save clean")
-            } else {
-                let save = attentionList.joined(separator: joinMark)
-                print("save = \(save)")
-                UserDefaults.standard.set(save, forKey: listIndex)
-            }
-        }
-    }
+    private lazy var lastWord = localRealm.objects(LastWord.self)
     
-    private func fetchAttentionList() {
-        let cache = UserDefaults.standard.string(forKey: listIndex)
-        print("cache indexs: \(String(describing: cache))")
-        if let all = cache, !all.isEmpty {
-            var data = all.components(separatedBy: joinMark)
-            data.sort()
-            attentionList = data
-        }
-    }
-        
+    private lazy var attentionList = localRealm.objects(WordIndex.self)
+    
 }
 
 
@@ -103,12 +91,17 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         if let cell = cell as? WordCell {
             cell.titleLabel.text = rootWords[indexPath.item]
-            cell.titleLabel.textColor = attentionList.contains(String(indexPath.item)) ? .red : .white
-
+            
+            var contain = false
+            if let _ = attentionList.first(where: { $0.index == indexPath.item }) {
+                contain = true
+            }
+            cell.titleLabel.textColor = contain ? .red : .white
+            
             cell.indexLabel.text = "\(indexPath.item+1)"
             cell.indexLabel.textColor = .gray
         }
-
+        
         return cell
     }
     
@@ -120,11 +113,9 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             let ok = UIAlertAction(title: "添加", style: .default) { [weak self] action in
                 guard let self = self else { return }
                 
-                var data = self.attentionList
-                data.append(String(indexPath.item))
-                data.sort()
-                
-                self.attentionList = data
+                try! self.localRealm.write({
+                    self.localRealm.add(WordIndex(index: indexPath.item))
+                })
                 
                 tableView.reloadData()
             }
@@ -134,12 +125,14 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             present(alert, animated: true)
         }
         if !attentionList.isEmpty {
-            if let inRecord = attentionList.firstIndex(where: { $0 == String(indexPath.item) }) {
+            if let toDelete = attentionList.first(where: { $0.index == indexPath.item }) {
                 let alert = UIAlertController(title: "从加深列表里移除", message: nil, preferredStyle: .alert)
                 let ok = UIAlertAction(title: "移除", style: .default) { [weak self] action in
                     guard let self = self else { return }
                     
-                    self.attentionList.remove(at: inRecord)
+                    try! self.localRealm.write({
+                        self.localRealm.delete(toDelete)
+                    })
                     tableView.reloadData()
                 }
                 let cancel = UIAlertAction(title: "取消", style: .cancel)
@@ -152,20 +145,14 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
         } else {
             addToList()
         }
-
+        
     }
     
 }
-
-
-private let recordKey = "lastWords"
-private let listIndex = "forgetIndexs"
-private let joinMark = ","
 
 
 class WordCell: UITableViewCell {
     
     @IBOutlet weak var indexLabel: UILabel!
     @IBOutlet weak var titleLabel: UILabel!
-
 }
