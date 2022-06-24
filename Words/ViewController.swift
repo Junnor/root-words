@@ -15,7 +15,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "词根(\(rootWords.count))"
+        title = "Root (\(rootWords.count))"
         tableView.rowHeight = 50
         
         updateNaviItem()
@@ -36,8 +36,7 @@ class ViewController: UIViewController {
     
     @objc private func addRecord() {
         let alert = UIAlertController(title: "添加最新纪录", message: nil, preferredStyle: .alert)
-        alert.addTextField { _ in
-        }
+        alert.addTextField { _ in }
         let ok = UIAlertAction(title: "保存", style: .default) { [weak self] action in
             guard let self = self else { return }
             
@@ -69,14 +68,23 @@ class ViewController: UIViewController {
     
     private var attentionList: [String] = [] {
         didSet {
-            UserDefaults.standard.set(self.attentionList.joined(separator: indexJoin), forKey: attentionIndex)
-            print(self.attentionList)
+            print("list = \(attentionList)")
+            if attentionList.isEmpty {
+                UserDefaults.standard.set(nil, forKey: listIndex)
+                print("save clean")
+            } else {
+                let save = attentionList.joined(separator: joinMark)
+                print("save = \(save)")
+                UserDefaults.standard.set(save, forKey: listIndex)
+            }
         }
     }
     
     private func fetchAttentionList() {
-        if let all = UserDefaults.standard.string(forKey: attentionIndex), !all.isEmpty {
-            var data = all.components(separatedBy: indexJoin)
+        let cache = UserDefaults.standard.string(forKey: listIndex)
+        print("cache indexs: \(String(describing: cache))")
+        if let all = cache, !all.isEmpty {
+            var data = all.components(separatedBy: joinMark)
             data.sort()
             attentionList = data
         }
@@ -93,26 +101,30 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = rootWords[indexPath.item]
-        if attentionList.contains(String(indexPath.item)) {
-            cell.textLabel?.textColor = .red
-        } else {
-            cell.textLabel?.textColor = .white
+        if let cell = cell as? WordCell {
+            cell.titleLabel.text = rootWords[indexPath.item]
+            cell.titleLabel.textColor = attentionList.contains(String(indexPath.item)) ? .red : .white
+
+            cell.indexLabel.text = "\(indexPath.item+1)"
+            cell.indexLabel.textColor = .gray
         }
-        cell.textLabel?.font = .systemFont(ofSize: 17)
-        
+
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
         
         func addToList() {
             let alert = UIAlertController(title: "添加到加深列表里", message: nil, preferredStyle: .alert)
             let ok = UIAlertAction(title: "添加", style: .default) { [weak self] action in
                 guard let self = self else { return }
-
-                self.attentionList.append(String(indexPath.item))
-                self.attentionList.sort()
+                
+                var data = self.attentionList
+                data.append(String(indexPath.item))
+                data.sort()
+                
+                self.attentionList = data
                 
                 tableView.reloadData()
             }
@@ -147,7 +159,13 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
 
 
 private let recordKey = "lastWords"
-private let attentionIndex = "forgetIndexs"
-private let indexJoin = ","
+private let listIndex = "forgetIndexs"
+private let joinMark = ","
 
 
+class WordCell: UITableViewCell {
+    
+    @IBOutlet weak var indexLabel: UILabel!
+    @IBOutlet weak var titleLabel: UILabel!
+
+}
