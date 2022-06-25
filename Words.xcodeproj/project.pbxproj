@@ -78,8 +78,8 @@
 				5ABEBD45286469CB00B39AAD /* AppDelegate.swift */,
 				5ABEBD47286469CB00B39AAD /* SceneDelegate.swift */,
 				5ABEBD49286469CB00B39AAD /* ViewController.swift */,
-				5ABEBD5B28646A6800B39AAD /* Words3000.swift */,
 				5ABEBD5D28646AD400B39AAD /* WordsRoot.swift */,
+				5ABEBD5B28646A6800B39AAD /* Words3000.swift */,
 				5ABEBD4B286469CB00B39AAD /* Main.storyboard */,
 				5ABEBD4E286469CC00B39AAD /* Assets.xcassets */,
 				5ABEBD50286469CC00B39AAD /* LaunchScreen.storyboard */,
@@ -94,7 +94,6 @@
 				91C10F49B3F622B3E75146C1 /* Pods-Words.debug.xcconfig */,
 				64FEFFC740062221813C6EA3 /* Pods-Words.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
