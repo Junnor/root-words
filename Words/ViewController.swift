@@ -71,19 +71,11 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        func addToList() {
+                
+        func showAlertWith(_ ok: UIAlertAction) {
             let alert = UIAlertController(title: "加油狗头", message: nil, preferredStyle: .actionSheet)
-            let ok = UIAlertAction(title: "遗忘表 +", style: .default) { [weak self] action in
-                guard let self = self else { return }
-                
-                try! self.localRealm.write({
-                    self.localRealm.add(WordIndex(index: indexPath.item))
-                })
-                
-                tableView.reloadData()
-            }
-            let record = UIAlertAction(title: "阅读点", style: .default) { [weak self] action in
+            
+            let readDot = UIAlertAction(title: "阅读点", style: .default) { [weak self] action in
                 guard let self = self else { return }
                 
                 try! self.localRealm.write({
@@ -95,48 +87,36 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
                 })
                 self.updateNaviItem()
             }
+            
             let cancel = UIAlertAction(title: "取消", style: .destructive)
             alert.addAction(ok)
-            alert.addAction(record)
-
+            alert.addAction(readDot)
             alert.addAction(cancel)
             present(alert, animated: true)
         }
-        if !redList.isEmpty {
-            if let toDelete = redList.first(where: { $0.index == indexPath.item }) {
-                let alert = UIAlertController(title: "加油狗头", message: nil, preferredStyle: .actionSheet)
-                let ok = UIAlertAction(title: "遗忘表 -", style: .default) { [weak self] action in
-                    guard let self = self else { return }
-                    
-                    try! self.localRealm.write({
-                        self.localRealm.delete(toDelete)
-                    })
-                    tableView.reloadData()
-                }
-                let record = UIAlertAction(title: "阅读点", style: .default) { [weak self] action in
-                    guard let self = self else { return }
-                    
-                    try! self.localRealm.write({
-                        if self.lastWord.isEmpty {
-                            self.localRealm.add(LastWord(name: self.rootWords[indexPath.item]))
-                        } else {
-                            self.lastWord.last?.name = self.rootWords[indexPath.item]
-                        }
-                    })
-                    self.updateNaviItem()
-                }
-                let cancel = UIAlertAction(title: "取消", style: .destructive)
-                alert.addAction(ok)
-                alert.addAction(record)
-                alert.addAction(cancel)
-                present(alert, animated: true)
-            } else {
-                addToList()
-            }
-        } else {
-            addToList()
-        }
         
+        if let toDelete = redList.first(where: { $0.index == indexPath.item }) {
+            let ok = UIAlertAction(title: "遗忘表 -", style: .default) { [weak self] action in
+                guard let self = self else { return }
+                
+                try! self.localRealm.write({
+                    self.localRealm.delete(toDelete)
+                })
+                tableView.reloadData()
+            }
+            showAlertWith(ok)
+        } else {
+            let ok = UIAlertAction(title: "遗忘表 +", style: .default) { [weak self] action in
+                guard let self = self else { return }
+                
+                try! self.localRealm.write({
+                    self.localRealm.add(WordIndex(index: indexPath.item))
+                })
+                
+                tableView.reloadData()
+            }
+            showAlertWith(ok)
+        }
     }
     
 }
@@ -145,41 +125,10 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
 extension ViewController {
     
     private func updateNaviItem() {
-//        let record = UIBarButtonItem(image: .add, style: .done, target: self, action: #selector(addRecord))
-
         if let last = lastWord.last {
             let jump = UIBarButtonItem(title: last.name, style: .done, target: self, action: #selector(jump))
-//            navigationItem.rightBarButtonItems = [record, jump]
             navigationItem.rightBarButtonItems = [jump]
-        } else {
-//            navigationItem.rightBarButtonItem = record
         }
-    }
-    
-    @objc private func addRecord() {
-        let alert = UIAlertController(title: "添加阅读纪录", message: nil, preferredStyle: .alert)
-        alert.addTextField { _ in }
-        let ok = UIAlertAction(title: "保存", style: .default) { [weak self] action in
-            guard let self = self else { return }
-            
-            if let text = alert.textFields?.first?.text, !text.isEmpty {
-                
-                try! self.localRealm.write({
-                    if self.lastWord.isEmpty {
-                        self.localRealm.add(LastWord(name: text))
-                    } else {
-                        self.lastWord.last?.name = text
-                    }
-                })
-                self.updateNaviItem()
-            } else {
-                
-            }
-        }
-        let cancel = UIAlertAction(title: "取消", style: .cancel)
-        alert.addAction(ok)
-        alert.addAction(cancel)
-        present(alert, animated: true)
     }
     
     @objc private func jump() {
