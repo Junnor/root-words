@@ -11,10 +11,15 @@ import RealmSwift
 
 class ViewController: UIViewController {
     
-    @IBOutlet weak var tableView: UITableView!
     
+    private lazy var collectionView: UIScrollView = {
+        let sv = UIScrollView()
+        
+        return sv
+    }()
+        
     private lazy var rootWords: [String] = {
-        let items = wordsRoot.map { $0.components(separatedBy: "\"")[1] }
+        let items = sourceRootWords.map { $0.components(separatedBy: "\"")[1] }
         return items
     }()
     
@@ -26,123 +31,129 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        title = "Root (\(rootWords.count))"
-        tableView.rowHeight = 50
-        
-        updateNaviItem()
-    }
-    
-}
+                        
+        print(rootWords.count)
 
-extension ViewController: UITableViewDataSource, UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return rootWords.count
+        view.addSubview(collectionView)
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        if let cell = cell as? WordCell {
-            let word = rootWords[indexPath.item]
-            cell.titleLabel.text = word
-            
-            var contain = false
-            if let _ = redList.first(where: { $0.index == indexPath.item }) {
-                contain = true
-            }
-            
-            if contain {
-                cell.titleLabel.textColor = .red
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        let w = UIScreen.main.bounds.width
+        
+        let beginY: CGFloat = 100
+        var x: CGFloat = 0
+        var y: CGFloat = beginY
+        let countInLines: CGFloat = 3
+        
+        
+        let itemW = w/countInLines
+        let itemH: CGFloat = 83
+        
+        var items: [UIScrollView] = []
+        
+        for _ in 0...11 {
+            let s = UIScrollView()
+            s.backgroundColor = .white
+            s.frame = CGRect(x: 0, y: 0, width: w, height: itemH*16+beginY)
+            view.addSubview(s)
+            items.append(s)
+        }
+        
+        for i in 1...rootWords.count {
+            let cell = WordCell(frame: CGRect(x: x, y: y, width: itemW, height: itemH))
+            cell.titleLabel.text = rootWords[i-1]
+            cell.indexLabel.text = "\(i)"
+                        
+            items[(i-1)/48].addSubview(cell)
+
+            x += itemW
+            if i % 48 == 0 {
+                // new page
+                y = beginY
+                x = 0
             } else {
-                if lastWord.last?.name == word {
-                    cell.titleLabel.textColor = .systemBlue
-                } else {
-                    cell.titleLabel.textColor = .white
+                if i % Int(countInLines) == 0 {
+                    y += itemH
+                    x = 0
                 }
             }
-            
-            cell.indexLabel.text = "\(indexPath.item+1)"
-            cell.indexLabel.textColor = .gray
         }
+//        collectionView.backgroundColor = .white
+//        collectionView.isScrollEnabled = true
+//        collectionView.contentSize = CGSize(width: w, height: y+200)
+
+        print(y+200)
+//        collectionView.frame = view.bounds
+//        collectionView.frame = CGRect(x: 0, y: 0, width: w, height: y+200)
+        items.forEach({ ImageSaver().writeToPhotoAlbum(image: $0.asImage()) })
         
-        return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-                
-        func showAlertWith(_ ok: UIAlertAction) {
-            let alert = UIAlertController(title: "加油狗头", message: nil, preferredStyle: .actionSheet)
-            
-            let readDot = UIAlertAction(title: "阅读点", style: .default) { [weak self] action in
-                guard let self = self else { return }
-                
-                try! self.localRealm.write({
-                    if self.lastWord.isEmpty {
-                        self.localRealm.add(LastWord(name: self.rootWords[indexPath.item]))
-                    } else {
-                        self.lastWord.last?.name = self.rootWords[indexPath.item]
-                    }
-                })
-                self.updateNaviItem()
-            }
-            
-            let cancel = UIAlertAction(title: "取消", style: .destructive)
-            alert.addAction(ok)
-            alert.addAction(readDot)
-            alert.addAction(cancel)
-            present(alert, animated: true)
-        }
+}
+
+
+class WordCell: UIView {
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
         
-        if let toDelete = redList.first(where: { $0.index == indexPath.item }) {
-            let ok = UIAlertAction(title: "遗忘表 -", style: .default) { [weak self] action in
-                guard let self = self else { return }
-                
-                try! self.localRealm.write({
-                    self.localRealm.delete(toDelete)
-                })
-                tableView.reloadData()
-            }
-            showAlertWith(ok)
-        } else {
-            let ok = UIAlertAction(title: "遗忘表 +", style: .default) { [weak self] action in
-                guard let self = self else { return }
-                
-                try! self.localRealm.write({
-                    self.localRealm.add(WordIndex(index: indexPath.item))
-                })
-                
-                tableView.reloadData()
-            }
-            showAlertWith(ok)
-        }
+        
+        addSubview(titleLabel)
+        addSubview(indexLabel)
+        
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        indexLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
+        titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        
+        indexLabel.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        indexLabel.trailingAnchor.constraint(equalTo: titleLabel.leadingAnchor, constant: -10).isActive = true
     }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 30)
+        label.textColor = .black
+        return label
+    }()
+    
+    lazy var indexLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .gray
+        return label
+    }()
     
 }
 
 
-extension ViewController {
+extension UIView {
     
-    private func updateNaviItem() {
-        if let last = lastWord.last {
-            let jump = UIBarButtonItem(title: last.name, style: .done, target: self, action: #selector(jump))
-            navigationItem.rightBarButtonItems = [jump]
+    // Using a function since `var image` might conflict with an existing variable
+    // (like on `UIImageView`)
+    func asImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        return renderer.image { rendererContext in
+            layer.render(in: rendererContext.cgContext)
         }
     }
-    
-    @objc private func jump() {
-        if let last = lastWord.last,
-           let index = rootWords.firstIndex(where: { $0 == last.name }) {
-            tableView.scrollToRow(at: IndexPath(row: index, section: 0), at: .top, animated: true)
-        }
+}
+
+class ImageSaver: NSObject {
+    func writeToPhotoAlbum(image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(saveCompleted), nil)
     }
     
+    @objc func saveCompleted(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        print("Save finished!")
+    }
 }
 
-
-class WordCell: UITableViewCell {
-    
-    @IBOutlet weak var indexLabel: UILabel!
-    @IBOutlet weak var titleLabel: UILabel!
-}
